@@ -80,19 +80,31 @@
 # preswald.text("Figure 5 examines the temporal distribution of Callitrichidae specimens across different life stages. This longitudinal analysis may reveal important demographic shifts, reproductive patterns, or methodological biases in data collection that warrant further investigation.")
 # preswald.plotly(life_stage_plot)
 
-from preswald import connect, get_df, table, sidebar, table, text, selectbox, query, image, topbar
+from preswald import connect, get_df, table, sidebar, table, text, selectbox, query, image, topbar, checkbox
 import pandas as pd
 
 connect()
 
 sidebar(defaultopen = True)
 topbar()
-df = get_df('sample_csv')
-# print(df.dtypes)
-# pd_df = pd.read_csv("data/sample.csv")
-# print(pd_df.dtypes)
-df['Ash (%)'] = [float(i) for i in df['Ash (%)']]
-df['Moisture (%)'] = [float(i) for i in df['Moisture (%)']]
+df = get_df("sample_csv")
+var = df.dtypes.to_string()
+select = checkbox("Show table columns' datatypes")
+if select:
+    dtype_str = ', '.join(f"{col} → {dtype}" for col, dtype in df.dtypes.items())
+    text(f"**Columns' datatype in get_df's dataframe:** {dtype_str}")
+
+    pd_df = pd.read_csv("data/sample.csv")
+    pd_dtype_str = ', '.join(f"{col} → {dtype}" for col, dtype in pd_df.dtypes.items())
+    text(f"**Columns' datatype in panda's dataframe:** {pd_dtype_str}")
+
+df["Ash (%)"] = [float(i) for i in df["Ash (%)"]]
+df["Moisture (%)"] = [float(i) for i in df["Moisture (%)"]]
+df["Volatile_Oil (%)"] = [float(i) for i in df["Volatile_Oil (%)"]]
+df["Acid_Insoluble_Ash (%)"] = [float(i) for i in df["Acid_Insoluble_Ash (%)"]]
+df["Chromium (mg/kg)"] = [float(i) for i in df["Chromium (mg/kg)"]]
+df["Coumarin (mg/kg)"] = [float(i) for i in df["Coumarin (mg/kg)"]]
+
 text("***Structured AI Assessment, by Meghshanth Sara***")
 text("# Data of Cinnamon Quality Classification.")
 text("**About**: This dataset contains 60 balanced synthetic records representing chemical composition of Ceylon cinnamon samples, classified into three quality levels: High, Medium, and Low. Each class contains 20 samples, generated based on research standards and typical value ranges from academic studies. [Link to Dataset](https://www.kaggle.com/datasets/madaraweerasingha/cinnamon-quality-classification).")
@@ -103,18 +115,12 @@ image(
 text("\n")
 table(df)
 
-# sql = "SELECT * FROM sample WHERE Moisture = '10.00'"
-# sql = """
-#     SELECT * FROM sample_csv
-#     WHERE Moisture > 10.00
-# """
-
-try:
-    filtered_df = query("""SELECT * FROM sample_csv WHERE "Moisture (%)" > 12""", 'sample_csv')
-except ValueError as e:
-    print(f"Configuration error: {e}")
-except Exception as e:
-    print(f"Query error: {e}")
+# try:
+#     filtered_df = query("""SELECT * FROM sample_csv WHERE "Moisture (%)" > 12""", 'sample_csv')
+# except ValueError as e:
+#     print(f"Configuration error: {e}")
+# except Exception as e:
+#     print(f"Query error: {e}")
 
 # filtered_df = query(sql, 'sample_csv')
 # print(filtered_df)
@@ -122,34 +128,79 @@ except Exception as e:
 
 
 
-text("# My Data Analysis App")
-text("\n")
-# table(filtered_df, title="Filtered Data")
+text("# Differeant Correlation graphs")
 
 choice = selectbox(
     label = "Choose a plot",
-    options=["Filtered table","Scatter", "Pie"]
+    options=["Each feature's bar graph","Ash v/s Moisture", "Volatile Oil v/s Acid Insoluable Ash", "Chromium v/s Coumarin", "Pie chart"],
+    default="Each feature's bar graph"
 )
+text("\n")
 from preswald import slider
 from preswald import plotly
 import plotly.express as px
 
-if choice == "Filtered table":
-#    df['Moisture (%)'] = [float(i) for i in df['Moisture (%)']]
-    threshold = slider("Threshold", min_val=11, max_val=13, default=12)
-    table(df[df["Moisture (%)"] > threshold], title="Dynamic Data View")
+if choice == "Each feature's bar graph":
+    bar1 = px.bar(df, x="Quality_Label", y="Moisture (%)", hover_name="Sample_ID", title="Moisture (%)")
+    plotly(bar1, size=0.33)
 
-elif choice == "Scatter":
-    # plot = checkbox(label="Show the plot!")
+    bar2 = px.bar(df, x="Quality_Label", y="Ash (%)", hover_name="Sample_ID", title="Ash (%)")
+    plotly(bar2, size=0.33)
+
+    bar3 = px.bar(df, x="Quality_Label", y="Volatile_Oil (%)", hover_name="Sample_ID", title="Volatile Oil (%)")
+    plotly(bar3, size=0.33)
+
+    bar4 = px.bar(df, x="Quality_Label", y="Acid_Insoluble_Ash (%)", hover_name="Sample_ID", title="Acid Insoluable Ash (%)")
+    plotly(bar4, size=0.33)
+
+    bar5 = px.bar(df, x="Quality_Label", y="Chromium (mg/kg)", hover_name="Sample_ID", title="Chromium (mg/kg)")
+    plotly(bar5, size=0.33)
+
+    bar6 = px.bar(df, x="Quality_Label", y="Coumarin (mg/kg)", hover_name="Sample_ID", title="Coumarin (mg/kg)")
+    plotly(bar6, size=0.33)
+
+elif choice == "Ash v/s Moisture":
+    heatmap_choice = checkbox(label="Show the heatmap!")
     fig = px.scatter(df, x="Ash (%)", y="Moisture (%)",color="Quality_Label", hover_name="Sample_ID", title="Scatter Plot Ash v/s Moisture")
-    plotly(fig, size= 0.5)
+    plotly(fig)
 
-elif choice == "Pie":
-    # if plot:
-    # pie = checkbox(label="Show me the pie!")
+    if heatmap_choice:
+        custom_colors = [
+            [1.0, 'rgb(255,0,0)'],
+            [1.0, 'rgb(0,255,0)'],    
+            [1.0, 'rgb(0,0,255)']       
+        ]
+        heat = px.density_heatmap(df, "Ash (%)", "Moisture (%)", color_continuous_scale=custom_colors, title="Heatmap Ash v/s Moisture")
+        plotly(heat)
+
+elif choice == "Volatile Oil v/s Acid Insoluable Ash":
+    heatmap_choice = checkbox(label="Show the heatmap!")
+    fig = px.scatter(df, x="Volatile_Oil (%)", y="Acid_Insoluble_Ash (%)",color="Quality_Label", hover_name="Sample_ID", title="Scatter Plot Ash v/s Moisture")
+    plotly(fig)
+
+    if heatmap_choice:
+        custom_colors = [
+            [1.0, 'rgb(255,0,0)'],
+            [1.0, 'rgb(0,255,0)'],    
+            [1.0, 'rgb(0,0,255)']       
+        ]
+        heat = px.density_heatmap(df, "Volatile_Oil (%)", "Acid_Insoluble_Ash (%)", color_continuous_scale=custom_colors, title="Heatmap Ash v/s Moisture")
+        plotly(heat)
+
+elif choice == "Chromium v/s Coumarin":
+    heatmap_choice = checkbox(label="Show the heatmap!")
+    fig = px.scatter(df, x="Chromium (mg/kg)", y="Moisture (%)",color="Quality_Label", hover_name="Sample_ID", title="Scatter Plot Ash v/s Moisture")
+    plotly(fig)
+
+    if heatmap_choice:
+        custom_colors = [
+            [1.0, 'rgb(255,0,0)'],
+            [1.0, 'rgb(0,255,0)'],    
+            [1.0, 'rgb(0,0,255)']       
+        ]
+        heat = px.density_heatmap(df, "Chromium (mg/kg)", "Coumarin (mg/kg)", color_continuous_scale=custom_colors, title="Heatmap Ash v/s Moisture")
+        plotly(heat)
+
+elif choice == "Pie chart":
     pie = px.pie(df, names="Quality_Label", title="Percentage of each Quality")
     plotly(pie, 0.5)
-    # if pie:  
-heat = px.density_heatmap(df, "Ash (%)", "Moisture (%)")
-# heat.update_layout(yaxis=dict(autorange = "reversed"))
-plotly(heat)
