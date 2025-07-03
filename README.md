@@ -18,3 +18,7 @@
 - ../data: directory which contains the data(```sample.csv```) file.
 - ../images: Image assets for the logo of the application.
 - ../preswald_export: contains the html format exported files of the applications which can be used to deploy on hosting sites, run locally or share the application with others.
+
+## Dataset:
+
+- [Cinnamon Quality Classification](https://www.kaggle.com/datasets/madaraweerasingha/cinnamon-quality-classification/data), from Kaggle.
