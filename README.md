@@ -2,6 +2,8 @@
 
 **By: Meghshanth Sara**
 
+Deployed on Vercel hosting: [my_assessment_app](https://my-assessment-app-weld.vercel.app/)
+
 ## How to run the code locally:
 
 **Note:** Make sure that your default browser is Google Chrome or a chromium browser to run this.
